@@ -1,6 +1,8 @@
-# TB Chest X-ray Detection
+# TB Chest X-ray Detection — Shortcut Learning Study
 
-Binary classifier (Tuberculosis vs Normal) using two-stage MobileNetV2 transfer learning, with external validation, calibration, and INT8 TFLite deployment.
+MobileNetV2 TB-CXR classifier that achieves near-perfect in-domain AUC (0.9995) but collapses on independent hospital cohorts (0.70–0.78 AUC, ~0.25 gap). The central finding is that this generalisation gap resists two standard mitigations — harmonisation/augmentation (+0.02 gain) and lung segmentation (Dice 0.975) which *worsened* unbiased external performance, contradicting prior COVID-CXR work.
+
+Targeting IEEE journal publication.
 
 ## Requirements
 
@@ -79,8 +81,13 @@ In Jupyter, the kernel menu is at **Kernel → Change kernel → TB Analysis (.v
 On first run the notebook will:
 - Download the Kaggle TB dataset (~2 GB) → `data/kaggle/`
 - Download NLM Montgomery (~1.5 GB) + Shenzhen (~3.5 GB) datasets → `data/`
-- Train the model (~60–90 min on M4 CPU/GPU)
-- Produce evaluation plots, Grad-CAM visualisations, and a `tb_detector_int8.tflite` file
+- Train the baseline model (~60–90 min on M4)
+- Train the robust model (Mitigation A, ~60–90 min)
+- Train the U-Net segmenter (~3–5 min) and produce masked datasets (~3–5 min)
+- Train the masked classifier (Mitigation B, ~30–60 min)
+- Run 5-fold cross-validation (~60–100 min)
+- Convert to `tb_detector_dynamic.tflite`
+- Total: **several hours** on first run; each training section is skipped if the `.keras` file already exists
 
 **Subsequent runs skip all downloads automatically** — datasets are checked by directory existence before any network request is made.
 
@@ -89,7 +96,15 @@ On first run the notebook will:
 ```
 analysis/
 ├── analysis.ipynb
-├── kaggle.json          ← fill in your credentials
+├── kaggle.json               ← fill in your credentials
+├── tb_detector.keras         ← produced on first run
+├── tb_detector_robust.keras
+├── tb_lung_unet.keras
+├── tb_detector_masked.keras
+├── tb_cv_fold{0-4}.keras
+├── cv_results.json
+├── backbone_results.json
+├── tb_detector_dynamic.tflite
 └── data/
     ├── kaggle/
     │   └── TB_Chest_Radiography_Database/
@@ -109,6 +124,15 @@ To store datasets elsewhere, change `DATA_DIR` in cell 4 of the notebook.
 | PR-AUC | Precision-recall curve (more informative under 5:1 class imbalance) |
 | Sensitivity / Specificity | At operating threshold selected on validation set (≥ 0.90 sensitivity) |
 | External validation AUC | Per-cohort (Montgomery, Shenzhen) and combined |
-| Reliability diagrams | ECE before and after temperature scaling |
-| Grad-CAM overlays | In-domain and external samples — check attention falls inside lungs |
-| `tb_detector_int8.tflite` | INT8 quantized model with AUC delta and latency benchmark |
+| Reliability diagrams | ECE before and after temperature scaling (calibration fails — degenerate T=0.12) |
+| Grad-CAM / Integrated Gradients | In-domain and external samples |
+| `tb_detector.keras` | Main trained classifier |
+| `tb_detector_robust.keras` | Mitigation A: CLAHE + augmentation + multi-source |
+| `tb_lung_unet.keras` | U-Net lung segmenter (Montgomery masks, Dice 0.975) |
+| `tb_detector_masked.keras` | Mitigation B: classifier retrained on segmented images |
+| `tb_cv_fold{0-4}.keras` | 5-fold cross-validation models |
+| `cv_results.json` | Per-fold AUC metrics (in-domain / Montgomery / Shenzhen / gap) |
+| `backbone_results.json` | Backbone study results (MobileNetV2, DenseNet-121, EfficientNet-B0) |
+| `tb_detector_dynamic.tflite` | Dynamic-range quantized TFLite model (AUC Δ −0.0007, ~4 ms/image) |
+
+> **Note on TFLite:** dynamic-range quantization is used instead of INT8 because `tensorflow-macos` crashes on INT8 conversion via the MLIR/LLVM path. The conversion runs in an isolated subprocess via `SavedModel` export to survive the crash without killing the kernel.
