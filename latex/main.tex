@@ -2,9 +2,9 @@
 % For IEEE Access, switch to the official Access template (ieeeaccess.cls) and
 % paste the section bodies across; the structure below maps one-to-one.
 %
-% Remaining author actions before submission (tracked in PAPER_FINAL.md):
-%  - Re-read refs [4] and [5] to confirm the Table VI characterisation wording.
+% Remaining author action before submission (tracked in PAPER_FINAL.md):
 %  - Re-check ref [21] (medRxiv preprint) for a peer-reviewed version.
+% Table VI rows were all verified against primary sources on 2026-08-15.
 \documentclass[journal]{IEEEtran}
 
 \usepackage[T1]{fontenc}
@@ -522,26 +522,28 @@ often --- the very gap this study foregrounds.
 \label{tab:priorwork}
 \centering
 \footnotesize
-\begin{tabular}{p{3.6cm}p{4.6cm}p{4.4cm}p{3.4cm}}
+\begin{tabular}{p{3.4cm}p{4.2cm}p{4.8cm}p{3.6cm}}
 \toprule
-Study & Approach & Reported AUC & Cross-source external test? \\
+Study & Approach & Reported performance$^{*}$ & Cross-source external test? \\
 \midrule
-Lakhani \& Sundaram 2017~\cite{lakhani2017deep} & AlexNet/GoogLeNet &
-0.99 (in-domain) & Not reported as held-out external \\
+Lakhani \& Sundaram 2017~\cite{lakhani2017deep} & AlexNet $+$ GoogLeNet ensemble &
+AUC 0.99 (in-domain) & No --- random split of four pooled datasets \\
 Rahman \emph{et al.} 2020~\cite{rahman2020reliable} &
-CNNs $+$ segmentation (same Kaggle DB) & ${\sim}0.99$ & No (same source) \\
+Nine CNNs $+$ U-Net segmentation & Accuracy 99.9\% (segmented), 97.1\% (unsegmented);
+AUC not reported & No --- same database, introduced there \\
 Sathitratanacheewin \emph{et al.} 2020~\cite{sathitratanacheewin2020deep} &
-DCNN (Shenzhen-trained) & 0.85 in-domain / 0.71 external &
+DCNN (Shenzhen-trained) & AUC 0.85 in-domain / 0.71 external &
 Yes (one cohort, NIH CXR8) \\
 Karki \emph{et al.} 2022~\cite{karki2022generalization} &
-CNNs, multi-task (DR-TB) & ${\sim}0.85$ in-domain / 0.65 external & Yes \\
+CNNs, multi-task (DR-TB) & AUC ${\sim}0.85$ in-domain / 0.65 external & Yes \\
 Han \emph{et al.} 2025~\cite{han2025systematic} (meta, commercial) & Various &
-0.85--0.97 (external) & Yes \\
+AUC 0.85--0.97 (external) & Yes \\
 \textbf{This work} & MobileNetV2, DenseNet-121, EfficientNet-B0 &
-0.999 in-domain / 0.50--0.78 external$^{\dagger}$ &
+AUC 0.999 in-domain / 0.50--0.78 external$^{\dagger}$ &
 \textbf{Yes (two NLM cohorts)} \\
 \bottomrule
-\multicolumn{4}{l}{\footnotesize $^{\dagger}$Backbone- and cohort-dependent.}
+\multicolumn{4}{l}{\footnotesize $^{*}$Studies report different metrics; the metric is named per
+row. $^{\dagger}$Backbone- and cohort-dependent.}
 \end{tabular}
 \end{table*}
 

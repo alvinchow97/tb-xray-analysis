@@ -454,25 +454,27 @@ highlights that the strongest reported figures are predominantly in-domain, with
 cross-source external validation reported far less often --- the very gap this study foregrounds.
 
 \begin{table}[t]
-\caption{Reported TB-CXR performance and external-validation status (as-reported; datasets differ,
-so figures are not directly comparable).}
+\caption{Reported TB-CXR performance and external-validation status. Figures are as-reported and
+not directly comparable: datasets differ and studies report different metrics, so the metric is
+named in each row.}
 \label{tab:priorwork}
 \centering
 \small
-\begin{tabular}{p{3.1cm}p{3.5cm}p{3.4cm}p{3.0cm}}
+\begin{tabular}{p{2.9cm}p{3.3cm}p{3.7cm}p{3.2cm}}
 \toprule
-Study & Approach & Reported AUC & Cross-source external test? \\
+Study & Approach & Reported performance & Cross-source external test? \\
 \midrule
-\citet{lakhani2017deep} & AlexNet/GoogLeNet & 0.99 (in-domain) & Not reported as held-out
-external \\
-\citet{rahman2020reliable} & CNNs $+$ segmentation (same DB) & ${\sim}0.99$ & No (same source) \\
-\citet{sathitratanacheewin2020deep} & DCNN (Shenzhen-trained) & 0.85 in-domain / 0.71 external &
-Yes (one cohort) \\
-\citet{karki2022generalization} & CNNs, multi-task (DR-TB) & ${\sim}0.85$ in-domain / 0.65
+\citet{lakhani2017deep} & AlexNet $+$ GoogLeNet ensemble & AUC 0.99 (in-domain) & No --- random
+split of four pooled datasets \\
+\citet{rahman2020reliable} & Nine CNNs $+$ U-Net segmentation & Accuracy 99.9\% (segmented),
+97.1\% (unsegmented); AUC not reported & No --- same database, introduced there \\
+\citet{sathitratanacheewin2020deep} & DCNN (Shenzhen-trained) & AUC 0.85 in-domain / 0.71
+external & Yes (one cohort) \\
+\citet{karki2022generalization} & CNNs, multi-task (DR-TB) & AUC ${\sim}0.85$ in-domain / 0.65
 external & Yes \\
-\citet{han2025systematic} (meta) & Various & 0.85--0.97 (external) & Yes \\
-\textbf{This work} & MobileNetV2, DenseNet-121, EfficientNet-B0 & 0.999 in-domain / 0.50--0.78
-external & \textbf{Yes (two cohorts)} \\
+\citet{han2025systematic} (meta) & Various & AUC 0.85--0.97 (external) & Yes \\
+\textbf{This work} & MobileNetV2, DenseNet-121, EfficientNet-B0 & AUC 0.999 in-domain /
+0.50--0.78 external & \textbf{Yes (two cohorts)} \\
 \bottomrule
 \end{tabular}
 \end{table}
