@@ -8,3 +8,4 @@ backbone_study.log
 probe_feats_*.npz
 latex/main.pdf
 tb-paper-overleaf.zip
+.claude/
