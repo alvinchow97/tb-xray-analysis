@@ -1,138 +1,99 @@
-# TB Chest X-ray Detection — Shortcut Learning Study
+# TB Chest X-ray Detection — a Cross-Dataset Study of Shortcut Learning
 
-MobileNetV2 TB-CXR classifier that achieves near-perfect in-domain AUC (0.9995) but collapses on independent hospital cohorts (0.70–0.78 AUC, ~0.25 gap). The central finding is that this generalisation gap resists two standard mitigations — harmonisation/augmentation (+0.02 gain) and lung segmentation (Dice 0.975) which *worsened* unbiased external performance, contradicting prior COVID-CXR work.
+Code and results for the paper *"Tuberculosis Is Not in the Corner of the Image: A Cross-Dataset
+Study of Shortcut Learning and the Limits of Lung Segmentation in Chest-Radiograph Classifiers"*
+(under submission; draft in [`PAPER_FINAL.md`](PAPER_FINAL.md), IEEEtran sources in [`latex/`](latex/)).
 
-Targeting IEEE journal publication.
+## Findings in one paragraph
 
-## Requirements
+A MobileNetV2 TB classifier trained on the widely used Kaggle TB Chest Radiography Database
+reaches near-perfect in-domain AUC (0.9995) but collapses to 0.70–0.78 on two independent NLM
+hospital cohorts (Montgomery, Shenzhen) — a ~0.25 AUC generalisation gap that is stable across
+five-fold cross-validation and not attributable to duplicate-image contamination. The gap resists
+the standard mitigations: harmonisation + augmentation + multi-source training gains only +0.02,
+and lung segmentation with a high-quality U-Net (Dice 0.975) *degrades* the unbiased external
+cohort in every fold (−0.057 ± 0.011). The failure is architecture-dependent: DenseNet-121 and
+EfficientNet-B0 match MobileNetV2 in-domain yet each collapses on a *different* external cohort,
+so the two cohorts rank the three architectures in opposite orders — and a frozen-feature probe
+shows these failure profiles pre-exist in the ImageNet-pretrained representations before any
+fine-tuning. Masking homogenises all three backbones into a common 0.61–0.77 band. Conclusion:
+out-of-source external validation on more than one cohort is mandatory, and neither segmentation
+nor backbone choice validated on a single cohort confers robustness.
 
-- macOS with Apple Silicon (M-series)
-- Python 3.10+
-- ~10 GB free disk space (datasets)
-- Kaggle account (free)
+## Repository layout
 
-## 1 · One-time environment setup
-
-```bash
-cd /Users/alvinchow/analysis
-
-python3 -m venv .venv
-source .venv/bin/activate
-
-pip install tensorflow-macos tensorflow-metal \
-    opencv-python-headless scipy scikit-learn \
-    pillow matplotlib seaborn kaggle jupyter ipykernel
-
-python -m ipykernel install --user --name=tb-analysis --display-name "TB Analysis (.venv)"
-```
-
-> **Not on Apple Silicon?** Replace `tensorflow-macos tensorflow-metal` with `tensorflow`.
-
-## 2 · Kaggle credentials
-
-The training dataset is downloaded via the Kaggle API.
-
-1. Go to [kaggle.com](https://www.kaggle.com) → your profile → **Settings** → **API** → **Create New Token**
-2. Open `kaggle.json` in this folder and replace the placeholders with your real values:
-
-```json
-{"username":"YOUR_KAGGLE_USERNAME","key":"YOUR_KAGGLE_API_KEY"}
-```
-
-The notebook copies it to `~/.kaggle/kaggle.json` automatically on first run.
-
-## 3 · Open the notebook
-
-**In VS Code (recommended)**
-
-First, install the `code` CLI if you haven't already:
-1. Open VS Code from Applications
-2. `Cmd+Shift+P` → **Shell Command: Install 'code' command in PATH**
-3. Restart your terminal
-
-Then:
-```bash
-source .venv/bin/activate
-code analysis.ipynb
-```
-
-If the `code` command still isn't available, open directly with:
-```bash
-open -a "Visual Studio Code" analysis.ipynb
-```
-
-**In classic Jupyter**
-
-```bash
-source .venv/bin/activate
-jupyter notebook analysis.ipynb
-```
-
-## 4 · Select the kernel
-
-In VS Code, click **Select Kernel** (top-right of the notebook) → **TB Analysis (.venv)**.
-
-In Jupyter, the kernel menu is at **Kernel → Change kernel → TB Analysis (.venv)**.
-
-## 5 · Run
-
-**Kernel → Restart & Run All** (VS Code: `Cmd+Shift+P` → *Run All Cells*).
-
-On first run the notebook will:
-- Download the Kaggle TB dataset (~2 GB) → `data/kaggle/`
-- Download NLM Montgomery (~1.5 GB) + Shenzhen (~3.5 GB) datasets → `data/`
-- Train the baseline model (~60–90 min on M4)
-- Train the robust model (Mitigation A, ~60–90 min)
-- Train the U-Net segmenter (~3–5 min) and produce masked datasets (~3–5 min)
-- Train the masked classifier (Mitigation B, ~30–60 min)
-- Run 5-fold cross-validation (~60–100 min)
-- Convert to `tb_detector_dynamic.tflite`
-- Total: **several hours** on first run; each training section is skipped if the `.keras` file already exists
-
-**Subsequent runs skip all downloads automatically** — datasets are checked by directory existence before any network request is made.
-
-## Data layout
-
-```
-analysis/
-├── analysis.ipynb
-├── kaggle.json               ← fill in your credentials
-├── tb_detector.keras         ← produced on first run
-├── tb_detector_robust.keras
-├── tb_lung_unet.keras
-├── tb_detector_masked.keras
-├── tb_cv_fold{0-4}.keras
-├── cv_results.json
-├── backbone_results.json
-├── tb_detector_dynamic.tflite
-└── data/
-    ├── kaggle/
-    │   └── TB_Chest_Radiography_Database/
-    ├── montgomery/
-    ├── montgomery.zip
-    ├── shenzhen/
-    └── shenzhen.zip
-```
-
-To store datasets elsewhere, change `DATA_DIR` in cell 4 of the notebook.
-
-## What the notebook produces
-
-| Output | Description |
+| Path | Contents |
 |---|---|
-| ROC-AUC + 95% CI | Bootstrapped over 2 000 resamples |
-| PR-AUC | Precision-recall curve (more informative under 5:1 class imbalance) |
-| Sensitivity / Specificity | At operating threshold selected on validation set (≥ 0.90 sensitivity) |
-| External validation AUC | Per-cohort (Montgomery, Shenzhen) and combined |
-| Reliability diagrams | ECE before and after temperature scaling (calibration fails — degenerate T=0.12) |
-| Grad-CAM / Integrated Gradients | In-domain and external samples |
-| `tb_detector.keras` | Main trained classifier |
-| `tb_detector_robust.keras` | Mitigation A: CLAHE + augmentation + multi-source |
-| `tb_lung_unet.keras` | U-Net lung segmenter (Montgomery masks, Dice 0.975) |
-| `tb_detector_masked.keras` | Mitigation B: classifier retrained on segmented images |
-| `tb_cv_fold{0-4}.keras` | 5-fold cross-validation models |
-| `cv_results.json` | Per-fold AUC metrics (in-domain / Montgomery / Shenzhen / gap) |
-| `backbone_results.json` | Backbone study results (MobileNetV2, DenseNet-121, EfficientNet-B0) |
-| `tb_detector_dynamic.tflite` | Dynamic-range quantized TFLite model (AUC Δ −0.0007, ~4 ms/image) |
+| `analysis.ipynb` | Main notebook: data ingestion → training → evaluation → calibration → explainability → mitigations → TFLite. Runs top-to-bottom. |
+| `backbone_study.py` | **Canonical** backbone study (MobileNetV2 / DenseNet-121 / EfficientNet-B0 × raw / masked × 5 folds). Split-verified against the notebook, resumable via `backbone_results.json`. Supersedes the notebook's in-notebook backbone cells. |
+| `run_backbone_study.sh` | Runs the remaining backbone folds, one process per (backbone, condition). |
+| `densenet_probe.py` | Frozen-feature probe: ImageNet features + logistic head, plus the brightness-shortcut analysis. |
+| `make_figures.py` | Generates all five paper figures into `figures/` (PNG + PDF). CPU-only. |
+| `backbone_results.json` | All 30 backbone-study fold results (AUC per cohort). |
+| `cv_results.json` | Baseline 5-fold cross-validation results. |
+| `probe_results.json` | Frozen-probe AUCs and score percentiles for all three backbones. |
+| `figures/` | Publication figures. |
+| `latex/` | IEEEtran sources; compiles with `tectonic main.tex` (8 pages, no warnings). |
+| `PAPER_FINAL.md`, `FINDINGS.md` | Paper draft (canonical text) and the results narrative. |
+| `*.keras`, `*.tflite` | Trained models (baseline, robust, U-Net segmenter, masked, CV folds, TFLite export). |
 
-> **Note on TFLite:** dynamic-range quantization is used instead of INT8 because `tensorflow-macos` crashes on INT8 conversion via the MLIR/LLVM path. The conversion runs in an isolated subprocess via `SavedModel` export to survive the crash without killing the kernel.
+## Reproducing
+
+### 1. Environment
+
+Python 3.9+. On Apple Silicon:
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+On other platforms, replace `tensorflow-macos`/`tensorflow-metal` in `requirements.txt` with
+`tensorflow==2.16.2`.
+
+### 2. Data (~10 GB free disk)
+
+- **Kaggle TB Chest Radiography Database** (~2 GB): downloaded automatically on first notebook run
+  via the Kaggle API. Put your API token in `kaggle.json` (placeholder provided; get one from
+  kaggle.com → Settings → API).
+- **NLM Montgomery (~1.5 GB) and Shenzhen (~3.5 GB) sets**: downloaded automatically by the
+  notebook into `data/`.
+
+All downloads are idempotent — existing files are skipped. Dataset licenses remain with their
+providers (Qatar University/University of Dhaka for the Kaggle DB; U.S. National Library of
+Medicine for Montgomery/Shenzhen); this repository does not redistribute any image data.
+
+### 3. Run
+
+```bash
+jupyter notebook analysis.ipynb   # Kernel → Restart & Run All
+```
+
+First full run takes several hours (baseline + robust + segmenter + masked models + 5-fold CV +
+TFLite); each training section skips itself if its `.keras` file already exists. Then:
+
+```bash
+./run_backbone_study.sh           # backbone study (resumable; skips cached folds)
+python densenet_probe.py          # frozen-feature probe + brightness analysis
+python make_figures.py            # regenerate the five paper figures
+```
+
+`backbone_study.py` verifies its reproduced data split against the notebook's cached mask
+directory before training and aborts on mismatch, so script results are guaranteed comparable
+with notebook results.
+
+## Key result files
+
+`backbone_results.json` keys are `"<backbone>|<raw|masked>|<fold>"` with per-cohort AUCs
+(`in`, `mont`, `shen`). The paper's Table V is the per-condition mean ± std over folds; Fig. 5
+combines it with `probe_results.json`.
+
+## Known limitations
+
+Documented in the paper (Section V): no patient identifiers in the Kaggle DB (image-level
+splitting), segmenter trained on Montgomery (Shenzhen is the unbiased external test), three
+ImageNet CNN backbones only, retrospective public data.
+
+## License
+
+Code is MIT-licensed (see `LICENSE`). Cite via `CITATION.cff`.

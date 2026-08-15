@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this code or the reported results, please cite the accompanying paper."
+title: "Tuberculosis Is Not in the Corner of the Image: A Cross-Dataset Study of Shortcut Learning and the Limits of Lung Segmentation in Chest-Radiograph Classifiers"
+authors:
+  - family-names: Chow
+    given-names: Alvin
+    email: alvinchow97@gmail.com
+year: 2026
+type: software
+# Update with the arXiv identifier / journal DOI once available:
+# identifiers:
+#   - type: doi
+#     value: 10.xxxx/xxxxx
