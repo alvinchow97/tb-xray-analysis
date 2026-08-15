@@ -15,3 +15,9 @@ tmlr/main.bbl
 tmlr/main.blg
 arxiv-submission.tar.gz
 tmlr-supplement.zip
+
+# Local-only working documents (kept on disk, never published)
+FINDINGS.md
+LITERATURE_REVIEW.md
+PAPER_FINAL.md
+SUBMISSION.md

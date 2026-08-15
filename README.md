@@ -2,7 +2,8 @@
 
 Code and results for the paper *"Tuberculosis Is Not in the Corner of the Image: A Cross-Dataset
 Study of Shortcut Learning and the Limits of Lung Segmentation in Chest-Radiograph Classifiers"*
-(under submission; draft in [`PAPER_FINAL.md`](PAPER_FINAL.md), IEEEtran sources in [`latex/`](latex/)).
+(under submission). LaTeX sources for the manuscript are in [`tmlr/`](tmlr/), with an IEEEtran
+port in [`latex/`](latex/).
 
 ## Findings in one paragraph
 
@@ -33,8 +34,8 @@ nor backbone choice validated on a single cohort confers robustness.
 | `cv_results.json` | Baseline 5-fold cross-validation results. |
 | `probe_results.json` | Frozen-probe AUCs and score percentiles for all three backbones. |
 | `figures/` | Publication figures. |
-| `latex/` | IEEEtran sources; compiles with `tectonic main.tex` (8 pages, no warnings). |
-| `PAPER_FINAL.md`, `FINDINGS.md` | Paper draft (canonical text) and the results narrative. |
+| `latex/` | IEEEtran port; compiles with `tectonic main.tex`. |
+| `tmlr/` | Manuscript source (TMLR style); `build.sh` produces the submission and preprint PDFs. |
 | `*.keras`, `*.tflite` | Trained models (baseline, robust, U-Net segmenter, masked, CV folds, TFLite export). |
 
 ## Reproducing

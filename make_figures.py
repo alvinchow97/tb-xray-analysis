@@ -1,4 +1,4 @@
-"""Generate the five publication figures for PAPER_FINAL.md into figures/.
+"""Generate the five publication figures for the paper into figures/.
 
 Runs CPU-only so it can execute alongside the GPU backbone-study training.
 Fig 5 uses whatever folds exist in backbone_results.json — re-run after the
